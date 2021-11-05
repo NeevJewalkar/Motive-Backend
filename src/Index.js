@@ -9,7 +9,7 @@ let port = process.env.PORT || 3000
 
 /* API functions */
 
-app.post('/get', (req, res) => {
+app.post('/motives/get', (req, res) => {
     client.connect(process.env.DB_URL, (err, db) => {
         if (err) throw err;
 
@@ -18,7 +18,7 @@ app.post('/get', (req, res) => {
 
         console.log(req.get('Name'))
 
-        collection.find({ Name: req.get('Name') }).toArray((err, docs) => {
+        collection.find({ Name: req.get('Username') }).toArray((err, docs) => {
             if (err) {
                 console.log(err)
                 res.send(err)
@@ -43,6 +43,62 @@ app.post('/get', (req, res) => {
     })
 })
 
+app.post('/motives/create', (req, res) => {
+    client.connect(process.env.DB_URL, (err, db) => {
+        if (err) throw err;
+
+        let dbo = db.db('Motive')
+        let collection = dbo.collection('motives')
+
+        CheckIfExists(req.get('Username'), req.get('Email'), (exists) => {
+            console.log(exists)
+            if (exists) {
+                collection.insertOne({
+                    Name: req.get('Username'),
+                    ID: GenId(),
+                    Motive: {
+                        Title: req.get('Title'),
+                        Description: req.get('Description'),
+                        Deadline: req.get('Deadline'),
+                        Amount: req.get('Amount'),
+                    },
+                    Contacts: []
+                }, (err, result) => {
+                    if (err) throw err;
+
+                    res.json({ message: "Created Motive" })
+
+                    console.log('Motive created')
+                })
+            } else {
+                res.json({ message: "User does not exist" })
+            }
+        })
+        
+    })
+})
+
+app.post('/motives/contacts/add', (req, res) => {
+    client.connect(process.env.DB_URL, (err, db) => {
+        if (err) throw err;
+
+        let dbo = db.db('Motive')
+        let collection = dbo.collection('motives')
+
+        let newContact = {
+            Name: req.get('Name'),
+            Email: req.get('Email'),
+            PledgedAmount: req.get('Amount'),
+        }
+
+        collection.updateOne({ ID: req.get('ID') }, { $push: { Contacts: newContact } }, (err, result) => {
+            if (err) throw err;
+
+            res.json({ message: "Added contact" })
+        })
+    })
+})
+
 /* User API functions */
 
 app.post('/user/create', (req, res) => {
@@ -53,7 +109,7 @@ app.post('/user/create', (req, res) => {
         let collection = dbo.collection('users')
 
         let newUser = {
-            Username: req.get('Username'),
+            Name: req.get('Username'),
             Password: req.get('Password'),
             Email: req.get('Email'),
         }
@@ -80,7 +136,7 @@ app.post('/user/get/', (req, res) => {
 
             if (docs[0] === undefined) {
                 res.json({ Message: 'User or Password is Invalid' })
-                break;
+                return;
             } else {
                 res.json({ Email: docs[0].Email })
             }
@@ -92,3 +148,40 @@ app.post('/user/get/', (req, res) => {
 app.listen(port, () => {
   console.log(`Server started on port ${port}`)
 })
+
+/* Acess Functions */
+
+let CheckIfExists = (Username, Email, cb) => {
+    client.connect(process.env.DB_URL, (err, db) => {
+        if (err) throw err;
+
+        let dbo = db.db('Motive')
+        let collection = dbo.collection('users')
+
+        collection.findOne({ "Name": Username, "Email": Email}, (err ,doc) => {
+            if (err) throw err;
+
+            console.log(doc)
+
+            let exists;
+
+            if (doc !== null) {
+                exists = doc.Name === Username && doc.Email === Email
+
+            } else {
+                exists = false
+
+            }
+
+            cb(exists)
+
+        })
+        console.log('disconnecting form collection')
+    })
+    console.log('disconnecting form client')
+}
+
+let GenId = () => {
+    let id = Date.now() * (Math.floor(Math.random() * 100) + 1)
+    return id
+}
