@@ -91,7 +91,7 @@ app.post('/motives/contacts/add', (req, res) => {
             PledgedAmount: req.get('Amount'),
         }
 
-        collection.updateOne({ ID: req.get('ID') }, { $push: { Contacts: newContact } }, (err, result) => {
+        collection.updateOne({ ID: parseInt(req.get('ID')) }, { $push: { Contacts: newContact } }, (err, result) => {
             if (err) throw err;
 
             res.json({ message: "Added contact" })
