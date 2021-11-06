@@ -99,6 +99,35 @@ app.post('/motives/contacts/add', (req, res) => {
     })
 })
 
+app.post('/motives/id/get', (req, res) => {
+    client.connect(process.env.DB_URL, (err, db) => {
+        if (err) throw err;
+
+        let dbo = db.db('Motive')
+        let collection = dbo.collection('motives')
+
+        collection.findOne({ ID: parseInt(req.get('ID')) }, (err, doc) => {
+            if (err) throw err;
+
+            console.log(doc)
+
+            if (doc !== null) {
+                res.json({
+                    Motive: {
+                        title: doc.Motive.Title,
+                        description: doc.Motive.Description,
+                        deadline: doc.Motive.Deadline,
+                        amount: doc.Motive.Amount,
+                    },
+                    Contacts: doc.Contacts
+                })
+            } else {
+                res.json({ message: "Motive does not exist" })
+            }
+        })
+    })
+})
+
 /* User API functions */
 
 app.post('/user/create', (req, res) => {
