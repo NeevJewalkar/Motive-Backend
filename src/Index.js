@@ -35,6 +35,7 @@ app.post('/motives/get', (req, res) => {
                     description: doc.Motive.Description,
                     deadline: doc.Motive.Deadline,
                     amount: doc.Motive.Amount,
+                    id: doc.ID
                 })
             })
 
@@ -187,7 +188,7 @@ let CheckIfExists = (Username, Email, cb) => {
         let dbo = db.db('Motive')
         let collection = dbo.collection('users')
 
-        collection.findOne({ "Name": Username, "Email": Email}, (err ,doc) => {
+        collection.findOne({ Name: Username, Email: Email}, (err ,doc) => {
             if (err) throw err;
 
             console.log(doc)
