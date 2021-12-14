@@ -121,6 +121,7 @@ app.post('/motives/id/get', (req, res) => {
                         amount: doc.Motive.Amount,
                     },
                     creater: doc.Name === req.get('Username'),
+                    pledged: doc.Contacts.Name === req.get('Username'),
                     Contacts: doc.Contacts
                 })
             } else {
