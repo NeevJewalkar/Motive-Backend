@@ -120,6 +120,7 @@ app.post('/motives/id/get', (req, res) => {
                         deadline: doc.Motive.Deadline,
                         amount: doc.Motive.Amount,
                     },
+                    creater: doc.Name === req.get('Username'),
                     Contacts: doc.Contacts
                 })
             } else {
