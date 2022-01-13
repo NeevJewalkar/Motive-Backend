@@ -1,11 +1,14 @@
 require('dotenv').config()
 const client = require('mongodb').MongoClient
 const express = require('express')
+const mailHandler = require('./Classes/EmailHandler/index.js')
 
+let mhandler = new mailHandler()
 let app = express()
 let url = process.env.DB_URL
+console.log(url)
 let port = process.env.PORT || 3000
-
+let pledged = false
 
 /* API functions */
 
@@ -35,7 +38,8 @@ app.post('/motives/get', (req, res) => {
                     description: doc.Motive.Description,
                     deadline: doc.Motive.Deadline,
                     amount: doc.Motive.Amount,
-                    id: doc.ID
+                    id: doc.ID,
+                    finished: doc.Finished
                 })
             })
 
@@ -63,7 +67,8 @@ app.post('/motives/create', (req, res) => {
                         Deadline: req.get('Deadline'),
                         Amount: req.get('Amount'),
                     },
-                    Contacts: []
+                    Contacts: [],
+                    Finished: false
                 }, (err, result) => {
                     if (err) throw err;
 
@@ -96,6 +101,39 @@ app.post('/motives/contacts/add', (req, res) => {
             if (err) throw err;
 
             res.json({ message: "Added contact" })
+            mhandler.sendEmailContact(req.get('ID'), process.env.DB_URL)
+        })
+    })
+})
+
+app.post('/motives/contacts/remove', (req, res) => {
+    client.connect(process.env.DB_URL, (err, db) => {
+        if (err) throw err;
+
+        let dbo = db.db('Motive')
+        let collection = dbo.collection('motives')
+
+        collection.updateOne({ ID: parseInt(req.get('ID')) }, { $pull: { Contacts: { Name: req.get('Name') } } }, (err, result) => {
+            if (err) throw err;
+
+            res.json({ message: "Removed contact" })
+            pledged = false
+        })
+    })
+})
+
+app.post('/motives/finish', (req, res) => {
+    client.connect(process.env.DB_URL, (err, db) => {
+        if (err) throw err;
+
+        let dbo = db.db('Motive')
+        let collection = dbo.collection('motives')
+
+        collection.updateOne({ ID: parseInt(req.get('ID')) }, { $set: { Finished: req.get('value').toLowerCase() == 'true' } }, (err, result) => {
+            if (err) throw err;
+
+            res.json({ message: "Changed Motive" })
+            mhandler.sendEmailFinish(req.get('ID'), process.env.DB_URL)
         })
     })
 })
@@ -113,6 +151,17 @@ app.post('/motives/id/get', (req, res) => {
             console.log(doc)
 
             if (doc !== null) {
+                console.log('Username: ' + req.get('Username'))
+                console.log(doc.Contacts.includes({ Name: req.get('Username') }))
+                for (let i = 0; i < doc.Contacts.length; i++) {
+                    if (doc.Contacts[i].Name === req.get('Username')) {
+                        pledged = true
+                    } else {
+                        pledged = false
+                    }
+                }
+                console.log(pledged)
+                console.log(doc.Contacts)
                 res.json({
                     Motive: {
                         title: doc.Motive.Title,
@@ -121,8 +170,9 @@ app.post('/motives/id/get', (req, res) => {
                         amount: doc.Motive.Amount,
                     },
                     creater: doc.Name === req.get('Username'),
-                    pledged: doc.Contacts.includes({ Name: req.get('Username') }),
-                    Contacts: doc.Contacts
+                    pledged: pledged,
+                    Contacts: doc.Contacts,
+                    Finished: doc.Finished
                 })
             } else {
                 res.json({ message: "Motive does not exist" })
@@ -152,6 +202,7 @@ app.post('/user/create', (req, res) => {
                 res.send(err)
             }
             res.send(result)
+            mhandler.newUser(req.get('Username'), req.get('Email'))
         })
     })
 })
@@ -163,7 +214,7 @@ app.post('/user/get/', (req, res) => {
         let dbo = db.db('Motive')
         let collection = dbo.collection('users')
 
-        collection.find({ Username: req.get('Username'), Password: req.get('Password') }).toArray((err, docs) => {
+        collection.find({ Name: req.get('Username'), Password: req.get('Password') }).toArray((err, docs) => {
             if (err) throw err;
 
             if (docs[0] === undefined) {
@@ -181,7 +232,7 @@ app.listen(port, () => {
   console.log(`Server started on port ${port}`)
 })
 
-/* Acess Functions */
+/* Access Functions */
 
 let CheckIfExists = (Username, Email, cb) => {
     client.connect(process.env.DB_URL, (err, db) => {
