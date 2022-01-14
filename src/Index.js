@@ -38,6 +38,7 @@ app.post('/motives/get', (req, res) => {
                     description: doc.Motive.Description,
                     deadline: doc.Motive.Deadline,
                     amount: doc.Motive.Amount,
+                    updates: doc.Updates,
                     id: doc.ID,
                     finished: doc.Finished
                 })
@@ -67,6 +68,7 @@ app.post('/motives/create', (req, res) => {
                         Deadline: req.get('Deadline'),
                         Amount: req.get('Amount'),
                     },
+                    Updates: [],
                     Contacts: [],
                     Finished: false
                 }, (err, result) => {
@@ -169,6 +171,7 @@ app.post('/motives/id/get', (req, res) => {
                         deadline: doc.Motive.Deadline,
                         amount: doc.Motive.Amount,
                     },
+                    Updates: doc.Updates,
                     creater: doc.Name === req.get('Username'),
                     pledged: pledged,
                     Contacts: doc.Contacts,

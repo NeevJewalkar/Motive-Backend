@@ -34,7 +34,7 @@ class mailHandler {
 
 
 
-    sendEmailFinish(mId, url) {
+    sendEmailFinish = (mId, url) => {
 
 
         let i = 0
@@ -75,7 +75,7 @@ class mailHandler {
     }
 
 
-    sendEmailUpdate(mId, url, update) {
+    sendEmailUpdate = (mId, url, update) => {
 
 
         let i = 0
@@ -112,7 +112,7 @@ class mailHandler {
         })
     }
 
-    sendEmailContact(mId, url, contact) {
+    sendEmailContact = (mId, url, contact) => {
 
         let makername = ''
         let makermail = ''
@@ -138,7 +138,7 @@ class mailHandler {
 
     }
 
-    newUser(name, email) {
+    newUser = (name, email) => {
             
             let mailOptions = {
                 from: 'neobo4i@gmail.com',
@@ -153,7 +153,7 @@ class mailHandler {
             })
     }
 
-    getMotiveInfo(mId, url, callback) {
+    getMotiveInfo = (mId, url, callback) => {
 
         // expected to get ~emails usernames pledges and maker username and email~
 
