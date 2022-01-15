@@ -2,8 +2,10 @@ require('dotenv').config()
 const client = require('mongodb').MongoClient
 const express = require('express')
 const mailHandler = require('./Classes/EmailHandler/index.js')
+const updateHandler = require('./Classes/MotiveUpdater/index.js')
 
 let mhandler = new mailHandler()
+let uhandler = new updateHandler()
 let app = express()
 let url = process.env.DB_URL
 console.log(url)
@@ -181,6 +183,19 @@ app.post('/motives/id/get', (req, res) => {
                 res.json({ message: "Motive does not exist" })
             }
         })
+    })
+})
+
+app.post('/motives/updates/get', (req, res) => {
+    uhandler.getUpdates(req.get('ID'), process.env.DB_URL, (updates) => {
+        res.json(updates)
+    })
+})
+
+app.post('/motives/updates/add', (req, res) => {
+    console.log(req.get('Update'))
+    uhandler.addUpdate(parseInt(req.get('ID')), process.env.DB_URL, req.get('Update'), (message) => {
+        res.json({ message: message })
     })
 })
 
