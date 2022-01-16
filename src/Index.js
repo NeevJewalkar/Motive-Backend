@@ -188,7 +188,7 @@ app.post('/motives/id/get', (req, res) => {
 
 app.post('/motives/updates/get', (req, res) => {
     uhandler.getUpdates(req.get('ID'), process.env.DB_URL, (updates) => {
-        res.json(updates)
+        res.json({ Updates: updates.Updates, creater: req.get('Username') === updates.Creater })
     })
 })
 
