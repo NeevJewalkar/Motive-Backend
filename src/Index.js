@@ -186,6 +186,18 @@ app.post('/motives/id/get', (req, res) => {
     })
 })
 
+app.post('/motives/update/get', (req, res) => {
+    uhandler.getUpdate(req.get('ID'), req.get('uID'), process.env.DB_URL, (update) => {
+        res.json({ Update: update.Update })
+    })
+})
+
+app.post('/motives/update/comment/add', (req, res) => {
+    uhandler.addComment(req.get('ID'), process.env.DB_URL, req.get('user'), req.get('content'), req.get('uID'), (e) => {
+        res.json({ message: "Added comment" })
+    })
+})
+
 app.post('/motives/updates/get', (req, res) => {
     uhandler.getUpdates(req.get('ID'), process.env.DB_URL, (updates) => {
         res.json({ Updates: updates.Updates, creater: req.get('Username') === updates.Creater })

@@ -125,6 +125,32 @@ class updateHandler {
     
     }
 
+    getUpdate = (mId, uId, url, cb) => {
+
+        client.connect(url, (err, db) => {
+            if (err) throw er;;
+
+            let dbo = db.db('Motive')
+            let collection = dbo.collection('motives')
+
+            collection.find({ ID: parseInt(mId) }).toArray((err, arr) => {
+
+                console.log(arr[0].Updates)
+
+                let updates = arr[0].Updates
+
+
+                for (let i = 0; i < updates.length; i++) {
+                    if (updates[i].ID === parseInt(uId)) {
+                        cb({ Update: updates[i] })
+                    }
+                }
+
+            })
+        })
+
+    }
+
 }
 
 module.exports = updateHandler
